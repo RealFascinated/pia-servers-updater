@@ -4,7 +4,7 @@
 
 ![Servers](https://img.shields.io/badge/servers-{server_count}-blue?style=flat-square)
 ![Regions](https://img.shields.io/badge/regions-{region_count}-blue?style=flat-square)
-![Last update](https://img.shields.io/badge/last_updated-{last_update}-blue?style=flat-square)
+![Last update](https://img.shields.io/badge/last_updated-{last_update_badge}-blue?style=flat-square)
 
 </div>
 

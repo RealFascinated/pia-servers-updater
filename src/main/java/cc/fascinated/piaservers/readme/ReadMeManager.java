@@ -18,6 +18,7 @@ import java.util.Map;
 public class ReadMeManager {
     private final DecimalFormat decimalFormat = new DecimalFormat("#,###");
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private final SimpleDateFormat badgeDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
 
     @SneakyThrows
     public ReadMeManager() {
@@ -39,9 +40,11 @@ public class ReadMeManager {
             regionCounts.put(region, regionCounts.getOrDefault(region, 0) + 1);
         }
 
+        Date now = new Date();
         // Replace the placeholders in the README.md file
         contents = contents.replace("{server_count}", decimalFormat.format(PiaManager.SERVERS.size()));
-        contents = contents.replace("{last_update}", dateFormat.format(new Date()));
+        contents = contents.replace("{last_update}", dateFormat.format(now));
+        contents = contents.replace("{last_update_badge}", badgeDateFormat.format(now));
         contents = contents.replace("{region_count}", decimalFormat.format(regionCounts.size()));
 
         // Write total servers per-region with improved formatting

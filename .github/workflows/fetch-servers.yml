@@ -16,7 +16,7 @@ jobs:
   docker:
     strategy:
       matrix:
-        arch: ["ubuntu-latest"]
+        arch: ["self-hosted"]
         git-version: ["2.44.0"]
         java-version: ["17"]
         maven-version: ["3.8.5"]
