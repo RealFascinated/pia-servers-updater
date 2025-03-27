@@ -2,9 +2,9 @@
 
 <div align="center">
 
-![Servers](https://img.shields.io/badge/servers-{server_count}-blue?style=flat-square)
-![Regions](https://img.shields.io/badge/regions-{region_count}-blue?style=flat-square)
-![Last update](https://img.shields.io/badge/updated-{last_update_badge}-blue?style=flat-square)
+![Servers](https://img.shields.io/badge/servers-{server_count}-blue)
+![Regions](https://img.shields.io/badge/regions-{region_count}-blue)
+![Last update](https://img.shields.io/badge/Last_Updated-{last_update_badge}-blue)
 
 </div>
 

@@ -14,11 +14,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TimeZone;
 
 public class ReadMeManager {
     private final DecimalFormat decimalFormat = new DecimalFormat("#,###");
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private final SimpleDateFormat badgeDateFormat = new SimpleDateFormat("yyyy-MM-dd");
+    private final SimpleDateFormat badgeDateFormat = new SimpleDateFormat("MMMM_d_yyyy_HH:mm_z");
 
     @SneakyThrows
     public ReadMeManager() {
@@ -41,6 +42,7 @@ public class ReadMeManager {
         }
 
         Date now = new Date();
+        badgeDateFormat.setTimeZone(TimeZone.getTimeZone("EST"));
         // Replace the placeholders in the README.md file
         contents = contents.replace("{server_count}", decimalFormat.format(PiaManager.SERVERS.size()));
         contents = contents.replace("{last_update}", dateFormat.format(now));
