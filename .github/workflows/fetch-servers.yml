@@ -51,5 +51,6 @@ jobs:
           git config --global user.email "liam+pia-servers-ci@fascinated.cc"
           git config --global user.name "PIA Servers CI"
           git add servers.json
+          git add README.md
           git commit -m "Scheduled update"
           git push "https://${{ github.actor }}:${{ secrets.GH_TOKEN }}@github.com/RealFascinated/PIA-Servers.git"
