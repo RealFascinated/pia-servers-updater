@@ -3,7 +3,7 @@ name: Fetch new Pia Servers
 on:
   workflow_dispatch:
   schedule:
-    - cron: "*/30 * * * *"
+    - cron: "*/15 * * * *"
   push:
     branches: ["master"]
     paths-ignore:

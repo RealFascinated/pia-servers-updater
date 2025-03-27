@@ -18,7 +18,7 @@ import java.util.Map;
 public class ReadMeManager {
     private final DecimalFormat decimalFormat = new DecimalFormat("#,###");
     private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private final SimpleDateFormat badgeDateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+    private final SimpleDateFormat badgeDateFormat = new SimpleDateFormat("yyyy-MM-dd");
 
     @SneakyThrows
     public ReadMeManager() {

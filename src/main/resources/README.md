@@ -4,12 +4,12 @@
 
 ![Servers](https://img.shields.io/badge/servers-{server_count}-blue?style=flat-square)
 ![Regions](https://img.shields.io/badge/regions-{region_count}-blue?style=flat-square)
-![Last update](https://img.shields.io/badge/last_updated-{last_update_badge}-blue?style=flat-square)
+![Last update](https://img.shields.io/badge/updated-{last_update_badge}-blue?style=flat-square)
 
 </div>
 
 ## Overview
-This repository maintains an up-to-date list of OpenVPN servers provided by Private Internet Access (PIA). The server list is automatically updated every 30 minutes to ensure you always have access to the latest server information.
+This repository maintains an up-to-date list of OpenVPN servers provided by Private Internet Access (PIA). The server list is automatically updated every 15 minutes to ensure you always have access to the latest server information.
 
 ## Server Statistics
 | Region | Server Count |
@@ -17,7 +17,7 @@ This repository maintains an up-to-date list of OpenVPN servers provided by Priv
 {server_table}
 
 ## Features
-- 🔄 Auto-updating every 30 minutes
+- 🔄 Auto-updating every 15 minutes
 - 🌍 Comprehensive server coverage
 - 📊 Detailed server statistics
 - 🔍 Easy to read format
