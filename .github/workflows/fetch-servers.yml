@@ -59,4 +59,4 @@ jobs:
           cd pia_servers
           git add servers.json
           git commit -m "Scheduled update"
-          git push
+          git push "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/RealFascinated/PIA-Servers.git"
