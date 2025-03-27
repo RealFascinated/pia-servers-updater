@@ -40,9 +40,9 @@ jobs:
 
       - name: Fetch new PIA servers
         run: |
-          git clone --depth 1 https://github.com/RealFascinated/PIA-Servers.git temp_pia_servers
+          git clone --depth 1 https://github.com/RealFascinated/PIA-Servers.git pia_servers
 
-          cp temp_pia_servers/servers.json .
+          cp pia_servers/servers.json .
           java -jar target/PIA-Servers.jar
 
           cp servers.json pia_servers/servers.json
