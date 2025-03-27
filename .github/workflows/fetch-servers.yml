@@ -50,8 +50,13 @@ jobs:
         run: |
           git config --global user.email "liam+pia-servers-ci@fascinated.cc"
           git config --global user.name "PIA Servers CI"
-          
-          cd temp_pia_servers
+
+          git clone --depth 1 https://github.com/RealFascinated/PIA-Servers.git pia_servers
+
+          cp servers.json pia_servers/servers.json
+
+          # Push to PIA-Servers repository
+          cd pia_servers
           git add servers.json
           git commit -m "Scheduled update"
           git push
