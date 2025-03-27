@@ -23,7 +23,7 @@ jobs:
     runs-on: ${{ matrix.arch }}
 
     steps:
-      - name: Checkout
+      - name: Checkout current repo
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -32,6 +32,8 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/RealFascinated/PIA-Servers.git temp_pia_servers
           cp temp_pia_servers/servers.json .
+          ls -la temp_pia_servers/
+          ls -la .
 
       - name: Set up JDK and Maven
         uses: s4u/setup-maven-action@v1.12.0
@@ -50,12 +52,8 @@ jobs:
         run: |
           git config --global user.email "liam+pia-servers-ci@fascinated.cc"
           git config --global user.name "PIA Servers CI"
-
           git clone --depth 1 https://github.com/RealFascinated/PIA-Servers.git pia_servers
-
           cp servers.json pia_servers/servers.json
-
-          # Push to PIA-Servers repository
           cd pia_servers
           git add servers.json
           git commit -m "Scheduled update"
