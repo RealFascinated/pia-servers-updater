@@ -32,7 +32,6 @@ jobs:
         run: |
           git clone --depth 1 https://github.com/RealFascinated/PIA-Servers.git temp_pia_servers
           cp temp_pia_servers/servers.json .
-          rm -rf temp_pia_servers
 
       - name: Set up JDK and Maven
         uses: s4u/setup-maven-action@v1.12.0
@@ -51,10 +50,8 @@ jobs:
         run: |
           git config --global user.email "liam+pia-servers-ci@fascinated.cc"
           git config --global user.name "PIA Servers CI"
-          # Push only servers.json to PIA-Servers repository
-          git remote add pia https://github.com/RealFascinated/PIA-Servers.git
-          git add servers.json
-          git add README.md
-          git commit -m "Scheduled update"
-          git push pia master:master --force
           
+          cd temp_pia_servers
+          git add servers.json
+          git commit -m "Scheduled update"
+          git push
