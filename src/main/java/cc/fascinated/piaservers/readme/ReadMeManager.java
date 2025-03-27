@@ -3,6 +3,7 @@ package cc.fascinated.piaservers.readme;
 import cc.fascinated.piaservers.Main;
 import cc.fascinated.piaservers.model.PiaServer;
 import cc.fascinated.piaservers.pia.PiaManager;
+import cc.fascinated.piaservers.utils.Strings;
 import lombok.SneakyThrows;
 
 import java.io.File;
@@ -44,7 +45,7 @@ public class ReadMeManager {
         // Write total servers per-region
         contents = contents.replace("{server_table}", regionCounts.entrySet().stream()
                 .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue())) // Sort from highest to lowest
-                .map(entry -> "| " + entry.getKey() + " | " + entry.getValue() + " |") // Map the region to the count
+                .map(entry -> "| " + Strings.formatRegion(entry.getKey()) + " | " + entry.getValue() + " |") // Map the region to the count
                 .reduce((a, b) -> a + "\n" + b).orElse("")); // Reduce the entries to a single string
 
         Files.write(readmeFile.toPath(), contents.getBytes());

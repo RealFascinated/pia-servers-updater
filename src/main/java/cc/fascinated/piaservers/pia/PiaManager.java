@@ -32,7 +32,7 @@ public class PiaManager {
     public static void updateServers() {
         File serversFile = new File("servers.json");
         if (!serversFile.exists()) {
-            System.out.println("serversFile.json does not exist, creating...");
+            System.out.println("servers.json does not exist, creating...");
             serversFile.createNewFile();
         }
 
