@@ -10,12 +10,14 @@ import java.io.File;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ReadMeManager {
     private final DecimalFormat decimalFormat = new DecimalFormat("#,###");
+    private final SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     @SneakyThrows
     public ReadMeManager() {
@@ -39,13 +41,15 @@ public class ReadMeManager {
 
         // Replace the placeholders in the README.md file
         contents = contents.replace("{server_count}", decimalFormat.format(PiaManager.SERVERS.size()));
-        contents = contents.replace("{last_update}", new Date().toString().replaceAll(" ", "_"));
+        contents = contents.replace("{last_update}", dateFormat.format(new Date()));
         contents = contents.replace("{region_count}", decimalFormat.format(regionCounts.size()));
 
-        // Write total servers per-region
+        // Write total servers per-region with improved formatting
         contents = contents.replace("{server_table}", regionCounts.entrySet().stream()
                 .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue())) // Sort from highest to lowest
-                .map(entry -> "| " + Strings.formatRegion(entry.getKey()) + " | " + entry.getValue() + " |") // Map the region to the count
+                .map(entry -> String.format("| %-30s | %-12s |", 
+                    Strings.formatRegion(entry.getKey()), 
+                    decimalFormat.format(entry.getValue())))
                 .reduce((a, b) -> a + "\n" + b).orElse("")); // Reduce the entries to a single string
 
         Files.write(readmeFile.toPath(), contents.getBytes());
