@@ -46,6 +46,7 @@ jobs:
           java -jar target/PIA-Servers.jar
 
           cp servers.json pia_servers/servers.json
+          cp README.md pia_servers/README.md
           cd pia_servers
 
           git config --global user.email "liam+pia-servers-ci@fascinated.cc"
