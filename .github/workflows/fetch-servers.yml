@@ -34,6 +34,7 @@ jobs:
           cp temp_pia_servers/servers.json .
           ls -la temp_pia_servers/
           ls -la .
+          cat servers.json | head -n 1
 
       - name: Set up JDK and Maven
         uses: s4u/setup-maven-action@v1.12.0
@@ -46,7 +47,10 @@ jobs:
         run: mvn clean package -T 2C -q
 
       - name: Fetch new PIA servers
-        run: java -jar target/PIA-Servers.jar
+        run: |
+          pwd
+          ls -la
+          java -jar target/PIA-Servers.jar
 
       - name: Commit and push changes
         run: |
