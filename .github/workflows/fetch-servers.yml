@@ -1,0 +1,60 @@
+name: Fetch new Pia Servers
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 * * * *"
+  push:
+    branches: ["master"]
+    paths-ignore:
+      - .gitignore
+      - README.md
+      - LICENSE
+      - servers.json
+
+jobs:
+  docker:
+    strategy:
+      matrix:
+        arch: ["ubuntu-latest"]
+        git-version: ["2.44.0"]
+        java-version: ["17"]
+        maven-version: ["3.8.5"]
+    runs-on: ${{ matrix.arch }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Clone PIA-Servers
+        run: |
+          git clone --depth 1 https://github.com/RealFascinated/PIA-Servers.git temp_pia_servers
+          cp temp_pia_servers/servers.json .
+          rm -rf temp_pia_servers
+
+      - name: Set up JDK and Maven
+        uses: s4u/setup-maven-action@v1.12.0
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: "zulu"
+          maven-version: ${{ matrix.maven-version }}
+
+      - name: Build PIA Servers
+        run: mvn clean package -T 2C -q
+
+      - name: Fetch new PIA servers
+        run: java -jar target/PIA-Servers.jar
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.email "liam+pia-servers-ci@fascinated.cc"
+          git config --global user.name "PIA Servers CI"
+          # Push only servers.json to PIA-Servers repository
+          git remote add pia https://github.com/RealFascinated/PIA-Servers.git
+          git add servers.json
+          git add README.md
+          git commit -m "Scheduled update"
+          git push pia master:master --force
+          
