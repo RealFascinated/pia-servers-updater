@@ -41,16 +41,15 @@ jobs:
       - name: Fetch new PIA servers
         run: |
           git clone --depth 1 https://github.com/RealFascinated/PIA-Servers.git temp_pia_servers
+
           cp temp_pia_servers/servers.json .
           java -jar target/PIA-Servers.jar
 
-      - name: Commit and push changes
-        run: |
-          git config --global user.email "liam+pia-servers-ci@fascinated.cc"
-          git config --global user.name "PIA Servers CI"
-          git clone --depth 1 https://github.com/RealFascinated/PIA-Servers.git pia_servers
           cp servers.json pia_servers/servers.json
           cd pia_servers
+
+          git config --global user.email "liam+pia-servers-ci@fascinated.cc"
+          git config --global user.name "PIA Servers CI"
           git add servers.json
           git commit -m "Scheduled update"
-          git push "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/RealFascinated/PIA-Servers.git"
+          git push "https://${{ github.actor }}:${{ secrets.GH_TOKEN }}@github.com/RealFascinated/PIA-Servers.git"
