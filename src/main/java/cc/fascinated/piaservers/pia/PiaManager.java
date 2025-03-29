@@ -19,7 +19,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 public class PiaManager {
@@ -46,6 +48,11 @@ public class PiaManager {
         }
         List<PiaServer> toRemove = new ArrayList<>();
 
+        // Remove duplicate servers
+        Set<String> uniqueServers = new HashSet<>();
+        SERVERS.removeIf(server -> !uniqueServers.add(server.getIp()));
+        System.out.printf("Removed %s duplicate servers\n", toRemove.size());
+
         System.out.println("Removing old servers...");
         // Get the servers that need to be removed
         for (PiaServer server : SERVERS) {
@@ -59,9 +66,23 @@ public class PiaManager {
         // Add the new servers to the list
         for (PiaServerToken serverToken : piaDomain) {
             InetAddress address = InetAddress.getByName(serverToken.getHostname());
+            String ip = address.getHostAddress();
 
-            // Add the server to the list
-            SERVERS.add(new PiaServer(address.getHostAddress(), serverToken.getRegion(), new Date()));
+            // Check if server already exists
+            boolean exists = false;
+            for (PiaServer existingServer : SERVERS) {
+                if (existingServer.getIp().equals(ip)) {
+                    // Update last seen time for existing server
+                    existingServer.setLastSeen(new Date());
+                    exists = true;
+                    break;
+                }
+            }
+
+            // Only add if it doesn't exist
+            if (!exists) {
+                SERVERS.add(new PiaServer(ip, serverToken.getRegion(), new Date()));
+            }
         }
 
         // Save the servers to the file
@@ -100,8 +121,10 @@ public class PiaManager {
         // Set the DNS resolver to Cloudflare
         Lookup.setDefaultResolver(new SimpleResolver("1.1.1.1"));
 
+        // Use a Set to prevent duplicate entries
+        Set<PiaServerToken> uniqueDomains = new HashSet<>();
+        
         // Search for the server domains
-        List<PiaServerToken> domains = new ArrayList<>();
         for (File file : files) {
             if (file.isDirectory()) {
                 continue;
@@ -123,13 +146,13 @@ public class PiaManager {
                     }
                     for (Record record : records) {
                         ARecord aRecord = (ARecord) record;
-                        domains.add(new PiaServerToken(aRecord.getAddress().getHostAddress(), region));
+                        uniqueDomains.add(new PiaServerToken(aRecord.getAddress().getHostAddress(), region));
                     }
                     break;
                 }
             }
         }
 
-        return domains;
+        return new ArrayList<>(uniqueDomains);
     }
 }
