@@ -51,7 +51,6 @@ public class PiaManager {
         // Remove duplicate servers
         Set<String> uniqueServers = new HashSet<>();
         SERVERS.removeIf(server -> !uniqueServers.add(server.getIp()));
-        System.out.printf("Removed %s duplicate servers\n", toRemove.size());
 
         System.out.println("Removing old servers...");
         // Get the servers that need to be removed
