@@ -2,6 +2,9 @@ package cc.fascinated.piaservers.common;
 
 import lombok.SneakyThrows;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -34,7 +37,7 @@ public class GitUtils {
     public static void cloneRepo() {
         if (Config.isProduction()) {
             System.out.println("Cloning repository");
-            runCommand("git", "clone", "--depth", "1", "https://github.com/RealFascinated/PIA-Servers.git");
+            runCommandWithOutput("git", "clone", "--depth", "1", "https://github.com/RealFascinated/PIA-Servers.git");
             runCommand("mv", "PIA-Servers/.git", ".");
             Path cloneServersJson = Path.of("PIA-Servers", "servers.json");
             if (Files.exists(cloneServersJson)) {
@@ -56,6 +59,26 @@ public class GitUtils {
         processBuilder.redirectError(ProcessBuilder.Redirect.INHERIT);
         try {
             Process process = processBuilder.start();
+            process.waitFor();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    /**
+     * Run a command and consume stdout/stderr so output appears in order (avoids buffered subprocess output appearing later).
+     */
+    private static void runCommandWithOutput(String... args) {
+        ProcessBuilder processBuilder = new ProcessBuilder(args);
+        processBuilder.redirectErrorStream(true);
+        try {
+            Process process = processBuilder.start();
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            }
             process.waitFor();
         } catch (Exception ex) {
             ex.printStackTrace();

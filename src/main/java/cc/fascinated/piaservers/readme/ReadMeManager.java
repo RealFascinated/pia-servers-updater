@@ -13,6 +13,7 @@ import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ReadMeManager {
     private static final DecimalFormat decimalFormat = new DecimalFormat("#,###");
@@ -43,14 +44,29 @@ public class ReadMeManager {
         contents = contents.replace("{last_update}", new Date().toString().replaceAll(" ", "_"));
         contents = contents.replace("{region_count}", decimalFormat.format(regionCounts.size()));
 
-        // Write total servers per-region
+        // Write total servers per-region (Region | Servers, sorted high to low)
         contents = contents.replace("{server_table}", regionCounts.entrySet().stream()
-                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue())) // Sort from highest to lowest
-                .map(entry -> "| " + entry.getKey() + " | " + entry.getValue() + " |") // Map the region to the count
-                .reduce((a, b) -> a + "\n" + b).orElse("")); // Reduce the entries to a single string
+                .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+                .map(entry -> "| " + formatRegionName(entry.getKey()) + " | " + decimalFormat.format(entry.getValue()) + " |")
+                .collect(Collectors.joining("\n")));
 
         Files.write(readmeFile.toPath(), contents.getBytes());
         System.out.println("Finished updating README.md");
         return readmeFile.toPath();
+    }
+
+    /**
+     * Format region key (e.g. us_west) for display (e.g. US West).
+     *
+     * @param key The region key
+     * @return The formatted region name
+     */
+    private static String formatRegionName(String key) {
+        if (key == null || key.isEmpty()) return key;
+        String[] parts = key.split("_");
+        return java.util.Arrays.stream(parts)
+                .filter(part -> !part.isEmpty())
+                .map(part -> part.length() == 2 ? part.toUpperCase() : part.substring(0, 1).toUpperCase() + part.substring(1).toLowerCase())
+                .collect(Collectors.joining(" "));
     }
 }

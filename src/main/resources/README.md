@@ -5,9 +5,13 @@
 ![Last update](https://img.shields.io/badge/last_updated-{last_update}-blue)
 
 This is a list of the OpenVPN servers provided by Private Internet Access (PIA). The list is updated hourly. </br>
-Servers that have not been active in the last 2 weeks will be automatically removed.
+Servers that have not been active in the last 2 weeks will be automatically removed. </br>
+</br>
+View the IP list [here](/blob/master/servers.json)
 
 ## Servers
-| Region               | Servers |
-|----------------------|---------|
+
+| Region | Servers |
+| ------ | ------- |
+
 {server_table}
