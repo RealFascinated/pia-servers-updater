@@ -7,7 +7,7 @@
 This is a list of the OpenVPN servers provided by Private Internet Access (PIA). The list is updated hourly. </br>
 Servers that have not been active in the last 2 weeks will be automatically removed. </br>
 </br>
-View the IP list [here](/blob/master/servers.json)
+View the IP list [here](/servers.json)
 
 ## Servers
 
