@@ -34,7 +34,7 @@ public class GitUtils {
     public static void cloneRepo() {
         if (Config.isProduction()) {
             System.out.println("Cloning repository");
-            runCommand("git", "clone", "https://github.com/RealFascinated/PIA-Servers.git");
+            runCommand("git", "clone", "--depth", "1", "https://github.com/RealFascinated/PIA-Servers.git");
             runCommand("mv", "PIA-Servers/.git", ".");
             Path cloneServersJson = Path.of("PIA-Servers", "servers.json");
             if (Files.exists(cloneServersJson)) {
