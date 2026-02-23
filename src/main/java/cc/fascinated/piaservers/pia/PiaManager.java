@@ -1,157 +1,142 @@
 package cc.fascinated.piaservers.pia;
 
 import cc.fascinated.piaservers.Main;
+import cc.fascinated.piaservers.common.GitUtils;
 import cc.fascinated.piaservers.model.PiaServer;
-import cc.fascinated.piaservers.model.PiaServerToken;
+import cc.fascinated.piaservers.readme.ReadMeManager;
 import com.google.gson.reflect.TypeToken;
 import lombok.SneakyThrows;
 import org.codehaus.plexus.archiver.zip.ZipUnArchiver;
-import org.xbill.DNS.*;
 import org.xbill.DNS.Record;
+import org.xbill.DNS.*;
 
 import java.io.File;
-import java.net.InetAddress;
+import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 public class PiaManager {
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
     private static final String PIA_OPENVPN_CONFIGS_URL = "https://www.privateinternetaccess.com/openvpn/openvpn.zip";
-    private static final long REMOVAL_THRESHOLD = TimeUnit.DAYS.toMillis(14); // 2 weeks
-    public static List<PiaServer> SERVERS = new ArrayList<>();
+    private static final long REMOVAL_THRESHOLD = TimeUnit.DAYS.toMicros(14); // 2 weeks
+    public static Set<PiaServer> SERVERS = new HashSet<>();
+    private static Path README_PATH;
 
     @SneakyThrows
-    public static void updateServers() {
+    public PiaManager() {
         File serversFile = new File("servers.json");
         if (!serversFile.exists()) {
-            System.out.println("servers.json does not exist, creating...");
+            System.out.println("The servers file doesn't exist, creating it...");
             serversFile.createNewFile();
         }
-
-        List<PiaServerToken> piaDomain = getPiaDomains();
-        System.out.println("Found " + piaDomain.size() + " pia domains");
-
         // Load the serversFile from the file
-        SERVERS = Main.GSON.fromJson(Files.readString(serversFile.toPath()), new TypeToken<List<PiaServer>>() {}.getType());
+        SERVERS = Main.GSON.fromJson(Files.readString(serversFile.toPath()), new TypeToken<Set<PiaServer>>() {}.getType());
         if (SERVERS == null) {
-            SERVERS = new ArrayList<>();
+            SERVERS = new HashSet<>();
         }
-        List<PiaServer> toRemove = new ArrayList<>();
-
-        // Remove duplicate servers
-        Set<String> uniqueServers = new HashSet<>();
-        SERVERS.removeIf(server -> !uniqueServers.add(server.getIp()));
-
-        System.out.println("Removing old servers...");
-        // Get the servers that need to be removed
-        for (PiaServer server : SERVERS) {
-            if (server.getLastSeen().getTime() < System.currentTimeMillis() - REMOVAL_THRESHOLD) {
-                toRemove.add(server);
-            }
-        }
-        SERVERS.removeAll(toRemove); // Remove the servers
-        System.out.printf("Removed %s old servers\n", toRemove.size());
-
-        // Add the new servers to the list
-        for (PiaServerToken serverToken : piaDomain) {
-            InetAddress address = InetAddress.getByName(serverToken.getHostname());
-            String ip = address.getHostAddress();
-
-            // Check if server already exists
-            boolean exists = false;
-            for (PiaServer existingServer : SERVERS) {
-                if (existingServer.getIp().equals(ip)) {
-                    // Update last seen time for existing server
-                    existingServer.setLastSeen(new Date());
-                    exists = true;
-                    break;
-                }
-            }
-
-            // Only add if it doesn't exist
-            if (!exists) {
-                SERVERS.add(new PiaServer(ip, serverToken.getRegion(), new Date()));
-            }
-        }
-
-        // Save the servers to the file
-        Files.writeString(serversFile.toPath(), Main.GSON.toJson(SERVERS));
-        System.out.printf("Wrote %s servers to the file\n", SERVERS.size());
-    }
-
-    @SneakyThrows
-    private static List<PiaServerToken> getPiaDomains() {
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(PIA_OPENVPN_CONFIGS_URL))
-                .GET()
-                .build();
-        // Send the request and get the response
-        HttpResponse<Path> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofFile(Files.createTempFile("openvpn", ".zip")));
-        if (response.statusCode() != 200) {
-            System.out.println("Failed to get the PIA OpenVPN configs, status code: " + response.statusCode());
-            System.exit(1);
-        }
-        Path downloadedFile = response.body();
-        File tempDir = Files.createTempDirectory("openvpn").toFile();
-        ZipUnArchiver unArchiver = new ZipUnArchiver();
-
-        // Extract the downloaded file
-        unArchiver.setSourceFile(downloadedFile.toFile());
-        unArchiver.setDestDirectory(tempDir);
-        unArchiver.extract();
-
-        // Get the extracted files
-        File[] files = tempDir.listFiles();
-        if (files == null || files.length == 0) {
-            System.out.println("Failed to extract the OpenVPN configs");
-            System.exit(1);
-        }
+        System.out.printf("Loaded %s servers from the file%n", SERVERS.size());
 
         // Set the DNS resolver to Cloudflare
         Lookup.setDefaultResolver(new SimpleResolver("1.1.1.1"));
 
-        // Use a Set to prevent duplicate entries
-        Set<PiaServerToken> uniqueDomains = new HashSet<>();
-        
-        // Search for the server domains
+        GitUtils.cloneRepo(); // Clone the repository
+
+        // Update the servers every 5 minutes
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                updateServers(serversFile); // Update the servers
+                README_PATH = ReadMeManager.updateReadme(); // Update the README.md
+            }
+        }, 0, TimeUnit.MINUTES.toMillis(5));
+
+        // Commit the files every hour
+        new Timer().scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                GitUtils.commitFiles("Scheduled update", serversFile.toPath(), README_PATH); // Commit the files
+            }
+        }, TimeUnit.MINUTES.toMillis(3), TimeUnit.HOURS.toMillis(1));
+    }
+
+    @SneakyThrows
+    public static void updateServers(File serversFile) {
+        List<PiaServer> servers = getPiaServers();
+
+        // Remove the servers that haven't been active in 2 weeks
+        int before = SERVERS.size();
+        SERVERS.removeIf(server -> System.currentTimeMillis() - server.getLastSeen().getTime() > REMOVAL_THRESHOLD);
+        System.out.printf("Removed %s servers that haven't been active in 2 weeks%n", before - SERVERS.size());
+
+        // Add the new servers to the list
+        int newServers = 0;
+        for (PiaServer piaServer : servers) {
+            boolean newServer = SERVERS.stream().noneMatch(server -> server.getIp().equals(piaServer.getIp()));
+            if (newServer) {
+                newServers++;
+            }
+
+            // Add the server to the list
+            SERVERS.add(piaServer);
+        }
+
+        // Save the servers to the file
+        Files.writeString(serversFile.toPath(), Main.GSON.toJson(SERVERS));
+        System.out.printf("Wrote %s servers to the file (+%s new)%n", SERVERS.size(), newServers);
+    }
+
+    @SneakyThrows
+    private static List<PiaServer> getPiaServers() {
+        long start = System.currentTimeMillis();
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(PIA_OPENVPN_CONFIGS_URL))
+                .GET()
+                .build();
+        HttpResponse<Path> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofFile(Files.createTempFile("openvpn", ".zip")));
+        if (response.statusCode() != 200) {
+            throw new IOException("Failed to get the PIA OpenVPN configs, status code: " + response.statusCode());
+        }
+        System.out.printf("Downloaded the OpenVPN configs in %sms%n", System.currentTimeMillis() - start);
+        Path downloadedFile = response.body();
+        File tempDir = Files.createTempDirectory("openvpn").toFile();
+        ZipUnArchiver unArchiver = new ZipUnArchiver();
+        unArchiver.setSourceFile(downloadedFile.toFile());
+        unArchiver.setDestDirectory(tempDir);
+        unArchiver.extract();
+
+        File[] files = tempDir.listFiles();
+        if (files == null || files.length == 0) {
+            throw new IOException("Failed to extract the OpenVPN configs");
+        }
+
+        List<PiaServer> servers = new ArrayList<>();
         for (File file : files) {
-            if (file.isDirectory()) {
+            if (file.isDirectory() || !file.getName().endsWith(".ovpn")) {
                 continue;
             }
-            if (!file.getName().endsWith(".ovpn")) {
-                continue;
-            }
-            // Read the file and get the server domain
             List<String> lines = Files.readAllLines(file.toPath());
             for (String line : lines) {
                 if (line.startsWith("remote ")) {
                     String[] parts = line.split(" ");
                     String hostname = parts[1];
                     String region = file.getName().split("\\.")[0];
-
                     Record[] records = new Lookup(hostname, Type.A).run();
-                    if (records == null) {
-                        continue;
-                    }
-                    for (Record record : records) {
-                        ARecord aRecord = (ARecord) record;
-                        uniqueDomains.add(new PiaServerToken(aRecord.getAddress().getHostAddress(), region));
+                    if (records != null) {
+                        for (Record record : records) {
+                            ARecord aRecord = (ARecord) record;
+                            servers.add(new PiaServer(aRecord.getAddress().getHostAddress(), region, new Date()));
+                        }
                     }
                     break;
                 }
             }
         }
-
-        return new ArrayList<>(uniqueDomains);
+        return servers;
     }
 }

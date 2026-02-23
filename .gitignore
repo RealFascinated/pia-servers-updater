@@ -28,5 +28,3 @@ fabric.properties
 git.properties
 pom.xml.versionsBackup
 .idea/
-
-servers.json
