@@ -30,6 +30,8 @@ public class PiaManager {
 
     @SneakyThrows
     public PiaManager() {
+        GitUtils.cloneRepo(); // Clone the repository (brings servers.json from repo if present)
+
         File serversFile = new File("servers.json");
         if (!serversFile.exists()) {
             System.out.println("The servers file doesn't exist, creating it...");
@@ -44,8 +46,6 @@ public class PiaManager {
 
         // Set the DNS resolver to Cloudflare
         Lookup.setDefaultResolver(new SimpleResolver("1.1.1.1"));
-
-        GitUtils.cloneRepo(); // Clone the repository
 
         // Update the servers every 5 minutes
         new Timer().scheduleAtFixedRate(new TimerTask() {

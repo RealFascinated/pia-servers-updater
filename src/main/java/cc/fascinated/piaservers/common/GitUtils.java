@@ -1,6 +1,10 @@
 package cc.fascinated.piaservers.common;
 
+import lombok.SneakyThrows;
+
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public class GitUtils {
 
@@ -26,11 +30,16 @@ public class GitUtils {
     /**
      * Clone the repository
      */
+    @SneakyThrows
     public static void cloneRepo() {
         if (Config.isProduction()) {
             System.out.println("Cloning repository");
             runCommand("git", "clone", "https://git.fascinated.cc/Fascinated/PIA-Servers.git");
             runCommand("mv", "PIA-Servers/.git", ".");
+            Path cloneServersJson = Path.of("PIA-Servers", "servers.json");
+            if (Files.exists(cloneServersJson)) {
+                Files.copy(cloneServersJson, Path.of("servers.json"), StandardCopyOption.REPLACE_EXISTING);
+            }
             runCommand("rm", "-rf", "PIA-Servers");
             runCommand("git", "pull"); // Pull the latest changes
         }
