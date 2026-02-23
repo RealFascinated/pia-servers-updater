@@ -23,7 +23,7 @@ public class GitUtils {
                 runCommand("git", "add", file.toAbsolutePath().toString());
             }
             runCommand("git", "commit", "-m", message);
-            runCommand("git", "push", "https://fascinated-helper:%s@git.fascinated.cc/Fascinated/PIA-Servers".formatted(System.getenv("AUTH_TOKEN")));
+            runCommand("git", "push", "https://realfascinated:%s@github.com/RealFascinated/PIA-Servers.git".formatted(System.getenv("AUTH_TOKEN")));
         }
     }
 
@@ -34,7 +34,7 @@ public class GitUtils {
     public static void cloneRepo() {
         if (Config.isProduction()) {
             System.out.println("Cloning repository");
-            runCommand("git", "clone", "https://git.fascinated.cc/Fascinated/PIA-Servers.git");
+            runCommand("git", "clone", "https://github.com/RealFascinated/PIA-Servers.git");
             runCommand("mv", "PIA-Servers/.git", ".");
             Path cloneServersJson = Path.of("PIA-Servers", "servers.json");
             if (Files.exists(cloneServersJson)) {
