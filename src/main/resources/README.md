@@ -13,5 +13,4 @@ View the IP list [here](/blob/master/servers.json)
 
 | Region | Servers |
 | ------ | ------- |
-
 {server_table}
