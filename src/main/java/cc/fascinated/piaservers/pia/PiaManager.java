@@ -1,6 +1,7 @@
 package cc.fascinated.piaservers.pia;
 
 import cc.fascinated.piaservers.Main;
+import cc.fascinated.piaservers.common.Config;
 import cc.fascinated.piaservers.common.GitUtils;
 import cc.fascinated.piaservers.model.PiaServer;
 import cc.fascinated.piaservers.readme.ReadMeManager;
@@ -21,12 +22,19 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import org.quartz.*;
+import org.quartz.impl.StdSchedulerFactory;
+
 public class PiaManager {
     private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
     private static final String PIA_OPENVPN_CONFIGS_URL = "https://www.privateinternetaccess.com/openvpn/openvpn.zip";
     private static final long REMOVAL_THRESHOLD = TimeUnit.DAYS.toMillis(14); // 2 weeks
     public static Set<PiaServer> SERVERS = new HashSet<>();
     private static Path README_PATH;
+
+    /** Used by CommitJob to access current paths. */
+    static volatile Path commitReadmePath;
+    static volatile Path commitServersPath;
 
     @SneakyThrows
     public PiaManager() {
@@ -47,22 +55,42 @@ public class PiaManager {
         // Set the DNS resolver to Cloudflare
         Lookup.setDefaultResolver(new SimpleResolver("1.1.1.1"));
 
+        commitServersPath = serversFile.toPath();
+
         // Update the servers every 5 minutes
         new Timer().scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
                 updateServers(serversFile); // Update the servers
                 README_PATH = ReadMeManager.updateReadme(); // Update the README.md
+                commitReadmePath = README_PATH;
             }
         }, 0, TimeUnit.MINUTES.toMillis(5));
 
-        // Commit the files every hour
-        new Timer().scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                GitUtils.commitFiles("Scheduled update", serversFile.toPath(), README_PATH); // Commit the files
+        // Commit on cron schedule (e.g. every hour via Config.COMMIT_CRON)
+        try {
+            Scheduler scheduler = StdSchedulerFactory.getDefaultScheduler();
+            scheduler.start();
+            JobDetail job = JobBuilder.newJob(CommitJob.class).withIdentity("commit-job").build();
+            CronTrigger trigger = TriggerBuilder.newTrigger()
+                    .withIdentity("commit-trigger")
+                    .withSchedule(CronScheduleBuilder.cronSchedule(Config.COMMIT_CRON))
+                    .build();
+            scheduler.scheduleJob(job, trigger);
+        } catch (SchedulerException e) {
+            throw new RuntimeException("Failed to schedule commit job", e);
+        }
+    }
+
+    /** Quartz job that runs git commit on the cron schedule. */
+    public static class CommitJob implements Job {
+        @Override
+        public void execute(JobExecutionContext context) {
+            Path readme = commitReadmePath;
+            if (readme != null && commitServersPath != null) {
+                GitUtils.commitFiles("Scheduled update", commitServersPath, readme);
             }
-        }, TimeUnit.MINUTES.toMillis(3), TimeUnit.HOURS.toMillis(1));
+        }
     }
 
     @SneakyThrows

@@ -10,6 +10,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.DecimalFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +65,7 @@ public class ReadMeManager {
     private static String formatRegionName(String key) {
         if (key == null || key.isEmpty()) return key;
         String[] parts = key.split("_");
-        return java.util.Arrays.stream(parts)
+        return Arrays.stream(parts)
                 .filter(part -> !part.isEmpty())
                 .map(part -> part.length() == 2 ? part.toUpperCase() : part.substring(0, 1).toUpperCase() + part.substring(1).toLowerCase())
                 .collect(Collectors.joining(" "));
