@@ -119,6 +119,9 @@ public class PiaManager {
         System.out.printf("Wrote %s servers to the file (+%s new)%n", SERVERS.size(), newServers);
     }
 
+    private static final int MAX_HTTP_RETRIES = 3;
+    private static final long RETRY_DELAY_MS = 2_000;
+
     @SneakyThrows
     private static List<PiaServer> getPiaServers() {
         long start = System.currentTimeMillis();
@@ -126,9 +129,27 @@ public class PiaManager {
                 .uri(URI.create(PIA_OPENVPN_CONFIGS_URL))
                 .GET()
                 .build();
-        HttpResponse<Path> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofFile(Files.createTempFile("openvpn", ".zip")));
-        if (response.statusCode() != 200) {
-            throw new IOException("Failed to get the PIA OpenVPN configs, status code: " + response.statusCode());
+        HttpResponse<Path> response = null;
+        IOException lastException = null;
+        for (int attempt = 1; attempt <= MAX_HTTP_RETRIES; attempt++) {
+            try {
+                response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofFile(Files.createTempFile("openvpn", ".zip")));
+                if (response.statusCode() == 200) {
+                    break;
+                }
+                lastException = new IOException("Failed to get the PIA OpenVPN configs, status code: " + response.statusCode());
+            } catch (IOException e) {
+                lastException = e;
+                if (attempt < MAX_HTTP_RETRIES) {
+                    System.err.printf("Attempt %d/%d failed (%s), retrying in %dms...%n", attempt, MAX_HTTP_RETRIES, e.getMessage(), RETRY_DELAY_MS * attempt);
+                    Thread.sleep(RETRY_DELAY_MS * attempt);
+                } else {
+                    throw e;
+                }
+            }
+        }
+        if (response == null || response.statusCode() != 200) {
+            throw lastException != null ? lastException : new IOException("Failed to get the PIA OpenVPN configs");
         }
         System.out.printf("Downloaded the OpenVPN configs in %sms%n", System.currentTimeMillis() - start);
         Path downloadedFile = response.body();
