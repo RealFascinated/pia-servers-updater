@@ -14,7 +14,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <slf4j.version>2.1.0-alpha1</slf4j.version>
+        <slf4j.version>1.7.36</slf4j.version>
     </properties>
 
     <build>
@@ -116,11 +116,11 @@
             <scope>compile</scope>
         </dependency>
 
-        <!-- SLF4J NOP binding to silence "Failed to load class org.slf4j.impl.StaticLoggerBinder" (used by Quartz) -->
+        <!-- SLF4J 1.x NOP binding so Quartz gets a logger (avoids "StaticLoggerBinder" warning) -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-nop</artifactId>
-            <version>2.0.9</version>
+            <version>${slf4j.version}</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>
